@@ -1,19 +1,26 @@
 import React from 'react';
+import AddPerson from './components/AddPerson.js'
 
 class App extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
       persons: [
-        { name: 'Arto Hellas',
-          number: '123456789',
-          id: 1
-        }
+        { name: 'Arto Hellas', number: '123456789', id: 1},
+        { name: 'Arto Hellas', number: '040-123456', id: 2},
+        { name: 'Martti Tienari', number: '040-123456', id: 3 },
+        { name: 'Arto Järvinen', number: '040-123456', id: 4 },
+        { name: 'Lea Kutvonen', number: '040-123456', id: 5 }
       ],
       // for form inputs
       newName: '',
-      newNumber: ''
+      newNumber: '',
+      filtering: ''
     }
+
+    this.addPerson = this.addPerson.bind(this)
+    this.handleNewName = this.handleNewName.bind(this)
+    this.handleNewNumber = this.handleNewNumber.bind(this)
   }
   
   addPerson = (event) => {
@@ -41,8 +48,8 @@ class App extends React.Component {
       alert('Nimi on jo listassa')
     }
   }
-
-  handleNewPerson = (event) => {
+  
+  handleNewName = (event) => {
     this.setState({ newName: event.target.value })
   }
 
@@ -50,37 +57,37 @@ class App extends React.Component {
     this.setState({ newNumber: event.target.value })
   }
 
+  filterPersons = (event) => {
+    this.setState({ filtering: event.target.value })
+  }
 
-  
   render() {
-
+    const filteredPersons = this.state.persons
+      .filter(person => 
+        (person.name.toLowerCase())
+        .includes(this.state.filtering.toLowerCase())
+      )
+    
     return (
       <div>
         <h2>Puhelinluettelo</h2>
-        <form onSubmit={this.addPerson}>
-          <div>
-            <div>
-              nimi: 
-              <input 
-                value={this.state.newName}
-                onChange={this.handleNewPerson}
-              />
-            </div>
-            <div>
-              numero:
-              <input
-                value={this.state.newNumber}
-                onChange={this.handleNewNumber}
-              />
-            </div>
-          </div>
-          <div>
-            <button type="submit">lisää</button>
-          </div>
-        </form>
+        <div>
+          rajaa näytettäviä:
+          <input
+            value={this.state.filtering}
+            onChange={this.filterPersons}
+          />
+        </div>
+        <AddPerson 
+          addPerson={this.addPerson}
+          handleNewName={this.handleNewName}
+          handleNewNumber={this.handleNewNumber}
+          newName={this.state.newName}
+          newNumber={this.state.newNumber}
+        />
         <h2>Numerot</h2>
         <ul>
-          {this.state.persons.map(person => 
+          {filteredPersons.map(person => 
             <li key={person.id}>
               {person.name} {person.number}
             </li>)}
