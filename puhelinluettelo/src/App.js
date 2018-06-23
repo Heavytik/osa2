@@ -1,17 +1,12 @@
 import React from 'react';
 import AddPerson from './components/AddPerson.js'
+import axios from 'axios'
 
 class App extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      persons: [
-        { name: 'Arto Hellas', number: '123456789', id: 1},
-        { name: 'Arto Hellas', number: '040-123456', id: 2},
-        { name: 'Martti Tienari', number: '040-123456', id: 3 },
-        { name: 'Arto Järvinen', number: '040-123456', id: 4 },
-        { name: 'Lea Kutvonen', number: '040-123456', id: 5 }
-      ],
+      persons: [],
       // for form inputs
       newName: '',
       newNumber: '',
@@ -21,6 +16,16 @@ class App extends React.Component {
     this.addPerson = this.addPerson.bind(this)
     this.handleNewName = this.handleNewName.bind(this)
     this.handleNewNumber = this.handleNewNumber.bind(this)
+  }
+
+  componentDidMount() {
+    console.log('did mount')
+    axios
+      .get('http://localhost:3001/persons')
+      .then(response => {
+        console.log('promise fulfilled')
+        this.setState({ persons: response.data })
+      })
   }
   
   addPerson = (event) => {
@@ -52,11 +57,9 @@ class App extends React.Component {
   handleNewName = (event) => {
     this.setState({ newName: event.target.value })
   }
-
   handleNewNumber = (event) => {
     this.setState({ newNumber: event.target.value })
   }
-
   filterPersons = (event) => {
     this.setState({ filtering: event.target.value })
   }
