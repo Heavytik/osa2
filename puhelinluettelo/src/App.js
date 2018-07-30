@@ -1,6 +1,8 @@
 import React from 'react';
 import AddPerson from './components/AddPerson.js'
 import axios from 'axios'
+import './App.css'
+import noteService from './services/persons.js'
 
 class App extends React.Component {
   constructor(props) {
@@ -19,19 +21,16 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    console.log('did mount')
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        console.log('promise fulfilled')
-        this.setState({ persons: response.data })
+
+    noteService
+      .getAll()
+      .then(persons => {
+        this.setState({ persons })
       })
   }
   
   addPerson = (event) => {
     event.preventDefault()
-    console.log('napinpainallus')
-    console.log(event)
     
     const nameAlreadyExist = this.state.persons
       .map((person) => person.name)
@@ -49,6 +48,12 @@ class App extends React.Component {
         persons,
         newName: ''
       })
+      
+      noteService.create({
+        name: this.state.newName,
+        number: this.state.newNumber
+      })
+      
     } else {
       alert('Nimi on jo listassa')
     }

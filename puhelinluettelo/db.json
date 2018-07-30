@@ -19,6 +19,16 @@
       "name": "Lea Kutvonen",
       "number": "040-123456",
       "id": 4
+    },
+    {
+      "name": "Jere Tofferi",
+      "number": "040123456",
+      "id": 5
+    },
+    {
+      "name": "Susanna Tofferi",
+      "number": "040654321",
+      "id": 6
     }
   ]
 }
