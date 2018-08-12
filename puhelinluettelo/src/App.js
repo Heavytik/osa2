@@ -1,7 +1,8 @@
 import React from "react";
 import AddPerson from "./components/AddPerson.js";
+import EventMessage from "./components/EventMessage.js";
 import "./App.css";
-import noteService from "./services/persons.js";
+import personService from "./services/persons.js";
 
 class App extends React.Component {
   constructor(props) {
@@ -11,7 +12,8 @@ class App extends React.Component {
       // for form inputs
       newName: "",
       newNumber: "",
-      filtering: ""
+      filtering: "",
+      eventMessage: null
     };
 
     this.addPerson = this.addPerson.bind(this);
@@ -20,11 +22,22 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    noteService.getAll().then(persons => {
+    personService.getAll().then(persons => {
       this.setState({ persons });
     });
   }
 
+  // Lyhytaikaisen ifoviestin muodostaminen
+  setMessage = message => {
+    this.setState({
+      eventMessage: message
+    });
+    setTimeout(() => {
+      this.setState({ eventMessage: null });
+    }, 5000);
+  };
+
+  // Uuden numeron lisääminen
   addPerson = event => {
     event.preventDefault();
 
@@ -42,15 +55,44 @@ class App extends React.Component {
 
       this.setState({
         persons,
-        newName: ""
+        newName: "",
+        newNumber: ""
       });
 
-      noteService.create({
+      personService.create({
         name: this.state.newName,
         number: this.state.newNumber
       });
+      this.setMessage(`lisättiin ${this.state.newName}`)
     } else {
-      alert("Nimi on jo listassa");
+      if (
+        window.confirm(
+          this.state.newName +
+            " on jo luettelossa, korvataanko vanha numero uudella?"
+        )
+      ) {
+        const person = this.state.persons.find(person =>
+          person.name.includes(this.state.newName)
+        );
+        const updatedPerson = { ...person, number: this.state.newNumber };
+
+        personService.update(person.id, updatedPerson).then(() => {
+          personService.getAll().then(persons => {
+            this.setState({ persons });
+          });
+          this.setMessage("Numero vaihdettu!")
+        })
+        .catch(error => {
+          alert("Virhe! Henkilö on kenties poistettu palvelimelta.");
+          this.setState({persons: this.state.persons.filter(p => p !== person)})
+        })
+
+        this.setState({
+          newName: "",
+          newNumber: ""
+        });
+        
+      }
     }
   };
 
@@ -64,6 +106,29 @@ class App extends React.Component {
     this.setState({ filtering: event.target.value });
   };
 
+  handleDelete = id => {
+    return () => {
+      // Määritellään poistettavan henkilön nimi
+      const nimi = this.state.persons
+        .filter(person => person.id === id)
+        .map(person => person.name);
+
+      // Poistetaan henkilö serveriltä
+      if (window.confirm("Poistetaanko " + nimi)) {
+        personService.destroy(id).then(() => {
+          personService.getAll().then(persons => {
+            this.setState({ persons });
+          });
+          this.setMessage(`Poistettiin ${nimi}`)
+        })
+        .catch(error => {
+          alert("Henkilö on jo kenties poistettu palvelimelta.")
+          this.setState({persons: this.state.persons.filter(p => p.id !== id)})
+        })
+      }
+    };
+  };
+
   render() {
     const filteredPersons = this.state.persons.filter(person =>
       person.name.toLowerCase().includes(this.state.filtering.toLowerCase())
@@ -72,6 +137,7 @@ class App extends React.Component {
     return (
       <div>
         <h2>Puhelinluettelo</h2>
+        <EventMessage message={this.state.eventMessage} />
         <div>
           rajaa näytettäviä:
           <input value={this.state.filtering} onChange={this.filterPersons} />
@@ -92,7 +158,12 @@ class App extends React.Component {
                   <td>{person.name}</td>
                   <td>{person.number}</td>
                   <td>
-                    <button type="button">poista</button>
+                    <button
+                      type="button"
+                      onClick={this.handleDelete(person.id)}
+                    >
+                      poista
+                    </button>
                   </td>
                 </tr>
               );
